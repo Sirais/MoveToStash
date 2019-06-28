@@ -592,7 +592,7 @@ namespace MoveToStash
         }
 
         private static string CheckItem(IEntity item)
-        {
+        { 
             var modsComponent = item?.GetComponent<Mods>();
             if (modsComponent == null)
                 return "";
