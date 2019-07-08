@@ -110,18 +110,20 @@ namespace MoveToStash
             {
                 _ingameState = GameController.Game.IngameState;
 
-                if (!_ingameState.IngameUi.InventoryPanel.IsVisible)
-                    return;
+                if (!_ingameState.IngameUi.InventoryPanel.IsVisible) // is inventory open ? 
+                    return; // No so do nothing
 
                 _inventory = _ingameState.IngameUi.InventoryPanel[InventoryIndex.PlayerInventory];
                 _inventoryZone = _inventory.InventoryUiElement.GetClientRect();
+
+                #region Handle Move to Stash key
                 if (!_holdKey && WinApi.IsKeyDown(Settings.MoveKey.Value))
                 {
                     _holdKey = true;
-                    if (_moveThread == null || !_moveThread.IsAlive)
+                    if (_moveThread == null || !_moveThread.IsAlive) // No move Thread ?
                     {
                         _moveThread = _ingameState.IngameUi.OpenLeftPanel.IsVisible
-                            ? new Thread(ScanInventory)
+                            ? new Thread(InventoryToStash)
                             : new Thread(SellItems);
                         _moveThread.Start();
                         Thread.Sleep(200);
@@ -135,7 +137,9 @@ namespace MoveToStash
                 }
                 else if (_holdKey && !WinApi.IsKeyDown(Settings.MoveKey.Value))
                     _holdKey = false;
+                #endregion
 
+                #region handle key Chaos receipe
                 if (!_holdKey && WinApi.IsKeyDown(Settings.ChaosKey.Value))
                 {
                     _holdKey = true;
@@ -154,7 +158,9 @@ namespace MoveToStash
                 }
                 else if (_holdKey && !WinApi.IsKeyDown(Settings.ChaosKey.Value))
                     _holdKey = false;
+                #endregion
 
+                #region Show/hide Buttons
                 if (Settings.ShowButtons.Value)
                 {
                     var invPoint = _inventoryZone;
@@ -167,14 +173,17 @@ namespace MoveToStash
                     {
                         #region MoveButton
 
+                        if (GameController.Game.IngameState.UIHover == null)
+                            return;
+
                         Utils.DrawButton(_rectMoveButton, 1, new Color(55, 21, 0), Color.DarkGoldenrod);
-                        if (_rectMoveButton.Contains(MousePosition) && _mouseButton == MouseButtons.Left)
+                        if (_rectMoveButton.Contains(MousePosition) && _mouseButton == MouseButtons.Left) 
                         {
                             _mouseButton = null;
                             if (_moveThread == null || !_moveThread.IsAlive)
                             {
                                 _moveThread = _ingameState.IngameUi.OpenLeftPanel.IsVisible
-                                    ? new Thread(ScanInventory)
+                                    ? new Thread(InventoryToStash)
                                     : new Thread(SellItems);
                                 _moveThread.Start();
                                 Thread.Sleep(65);
@@ -252,6 +261,7 @@ namespace MoveToStash
                         #endregion
                     }
                 }
+                #endregion
             }
             catch (Exception e)
             {
@@ -260,8 +270,10 @@ namespace MoveToStash
                 throw;
             }
         }
-
-        private void ScanInventory()
+        /// <summary>
+        /// 
+        /// </summary>
+        private void InventoryToStash()
         {
             if (!_ingameState.IngameUi.InventoryPanel.IsVisible)
             {
@@ -319,7 +331,8 @@ namespace MoveToStash
                 }
 
                 currentTab++;
-                if (currentTab > _ingameState.ServerData.StashPanel.TotalStashes)
+                if (currentTab > GameController.Game.IngameState.IngameUi.StashElement.TotalStashes)
+                //if (currentTab > _ingameState.ServerData.StashPanel.TotalStashes)
                     return;
                 NextTab(currentTab);
             }
@@ -342,7 +355,7 @@ namespace MoveToStash
                     KeyTools.KeyEvent(WinApiMouse.KeyEventFlags.KeyRightVirtual, WinApiMouse.KeyEventFlags.KeyEventKeyUp);
                     Thread.Sleep(Settings.Speed);
 
-                    if (_ingameState.ServerData.StashPanel.GetStashInventoryByIndex(needTab - 1).AsObject<Element>().IsVisible)
+                    if (GameController.Game.IngameState.IngameUi.StashElement.GetStashInventoryByIndex(needTab - 1).AsObject<Element>().IsVisible)
                         return;
                 }
                 while (_run);
@@ -356,7 +369,7 @@ namespace MoveToStash
                     KeyTools.KeyEvent(WinApiMouse.KeyEventFlags.KeyLeftVirtual, WinApiMouse.KeyEventFlags.KeyEventKeyUp);
                     Thread.Sleep(Settings.Speed);
 
-                    if (_ingameState.ServerData.StashPanel.GetStashInventoryByIndex(needTab - 1).AsObject<Element>().IsVisible)
+                    if (GameController.Game.IngameState.IngameUi.StashElement.GetStashInventoryByIndex(needTab - 1).AsObject<Element>().IsVisible)
                         return;
                 }
                 while (_run);
@@ -450,7 +463,7 @@ namespace MoveToStash
                     }
 
                 currentTab++;
-                if (currentTab > _ingameState.ServerData.StashPanel.TotalStashes)
+                if (currentTab > GameController.Game.IngameState.IngameUi.StashElement.TotalStashes)
                     return;
                 NextTab(currentTab);
             }
@@ -647,7 +660,7 @@ namespace MoveToStash
             {
                 Thread.Sleep(delay);
                 delay -= delay / 5;
-                inv = _ingameState.ServerData.StashPanel.GetStashInventoryByIndex(stashNum - 1);
+                inv = GameController.Game.IngameState.IngameUi.StashElement.GetStashInventoryByIndex(stashNum - 1);
             }
             while (inv == null && _run && delay > 0);
 
@@ -663,7 +676,7 @@ namespace MoveToStash
                 KeyTools.KeyEvent(WinApiMouse.KeyEventFlags.KeyLeftVirtual, WinApiMouse.KeyEventFlags.KeyEventKeyUp);
                 Thread.Sleep(Settings.Speed);
 
-                if (_ingameState.ServerData.StashPanel.GetStashInventoryByIndex(0).AsObject<Element>().IsVisible)
+                if (GameController.Game.IngameState.IngameUi.StashElement.GetStashInventoryByIndex(0).AsObject<Element>().IsVisible)
                     return;
             }
             while (_run);
